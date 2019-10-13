@@ -2,9 +2,7 @@ package com.yetx.utils;
 
 import com.yetx.enums.Command;
 import com.yetx.enums.SerializerAlgo;
-import com.yetx.packet.AbstractPacket;
-import com.yetx.packet.LoginRequestPacket;
-import com.yetx.packet.LoginResponsePacket;
+import com.yetx.packet.*;
 import com.yetx.serializer.Serializer;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
@@ -15,17 +13,24 @@ import io.netty.buffer.ByteBufAllocator;
  */
 public class PacketParser {
 
-    private static int magicNumber = 0x12345678;
+    public static final int magicNumber = 0x12345678;
 
     /**
-     * 对Packet进行序列化，然后包装成自定义的传输协议格式
+     * // 更改前的定义
+     * public ByteBuf encode(ByteBufAllocator byteBufAllocator, Packet packet) {
+     *     // 1. 创建 ByteBuf 对象
+     *     ByteBuf byteBuf = byteBufAllocator.ioBuffer();
+     *     // 2. 序列化 java 对象
      *
-     * @param packet 需要序列化的数据包
-     * @return netty数据传输单元ByteBuf
+     *     // 3. 实际编码过程
+     *
+     *     return byteBuf;
+     * }
      */
-    public static ByteBuf encode(AbstractPacket packet){
+    @Deprecated
+    public static ByteBuf encodeOld(ByteBufAllocator allocator, AbstractPacket packet){
 
-        ByteBuf byteBuf = ByteBufAllocator.DEFAULT.buffer();
+        ByteBuf byteBuf = allocator.ioBuffer();
 
         byte[] bytes = Serializer.DEFAULT.encode(packet);
 
@@ -39,6 +44,28 @@ public class PacketParser {
         byteBuf.writeBytes(bytes);
 
         return byteBuf;
+    }
+    /**
+     * 对Packet进行序列化，然后包装成自定义的传输协议格式
+     * @param byteBuf
+     * @param packet 需要序列化的数据包
+     * @return netty数据传输单元ByteBuf
+     */
+    public static void encode(ByteBuf byteBuf, AbstractPacket packet){
+
+//        ByteBuf byteBuf = byteBufAllocator.ioBuffer();
+
+        byte[] bytes = Serializer.DEFAULT.encode(packet);
+
+
+        // magicNumber(4 bytes) version(1) serializerAlgo(1) command(1) dataLength(4) data(n)
+        byteBuf.writeInt(magicNumber);
+        byteBuf.writeByte(AbstractPacket.version);
+        byteBuf.writeByte(Serializer.DEFAULT.getSerializerAlgrithm());
+        byteBuf.writeByte(packet.getCommand());
+        byteBuf.writeInt(bytes.length);
+        byteBuf.writeBytes(bytes);
+
     }
 
     /**
@@ -82,6 +109,7 @@ public class PacketParser {
     }
 
     /**
+     * 每加一个指令，都需要在这里进行配置
      * 获取数据包类型，用于反序列化
      * @param command
      * @return
@@ -91,7 +119,11 @@ public class PacketParser {
             return LoginRequestPacket.class;
         } else if(command == Command.LOGIN_RESPONE.command) {
             return LoginResponsePacket.class;
-        } else{
+        } else if(command == Command.MESSAGE_REQUEST.command) {
+            return MessageRequestPacket.class;
+        } else if(command == Command.MESSAGE_RESPONSE.command) {
+            return MessageResponsePacket.class;
+        } else {
             return null;
         }
     }

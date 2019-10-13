@@ -1,6 +1,9 @@
 package com.yetx.app;
 
+import com.yetx.handler.PacketDecoderHandler;
+import com.yetx.handler.PacketEncoderHandler;
 import com.yetx.handler.client.LoginClientHandler;
+import com.yetx.handler.client.MessageClientHandler;
 import com.yetx.utils.ClientUtils;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelInitializer;
@@ -21,14 +24,15 @@ public class IMClient {
                 .channel(NioSocketChannel.class)
                 .handler(new ChannelInitializer<SocketChannel>() {
                     protected void initChannel(SocketChannel socketChannel) throws Exception {
-                        System.out.println("init Channel function");
-
-                        // 添加一个逻辑处理器
+                        System.out.println("init client Channel ");
+                        socketChannel.pipeline().addLast(new PacketDecoderHandler());
                         socketChannel.pipeline().addLast(new LoginClientHandler());
+                        socketChannel.pipeline().addLast(new MessageClientHandler());
+                        socketChannel.pipeline().addLast(new PacketEncoderHandler());
                     }
 
                 });
-        ClientUtils.connect(bootstrap, "localhost", 8000, MAX_RETRY);
+        ClientUtils.IMconnect(bootstrap, "localhost", 8000, MAX_RETRY);
 
     }
 

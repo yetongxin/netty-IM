@@ -1,7 +1,12 @@
 package com.yetx.app;
 
 import com.yetx.handler.FirstServerReadHandler;
+import com.yetx.handler.PacketDecoderHandler;
+import com.yetx.handler.PacketEncoderHandler;
+import com.yetx.handler.Spliter;
+import com.yetx.handler.server.AuthServerHandler;
 import com.yetx.handler.server.LoginServerHandler;
+import com.yetx.handler.server.MessageServerHandler;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -26,9 +31,13 @@ public class IMServer {
                     @Override
                     protected void initChannel(NioSocketChannel nioSocketChannel) throws Exception {
                         System.out.println("server initChannel...");
-
-                        // 添加一个逻辑处理器
+                        nioSocketChannel.pipeline().addLast(new Spliter());
+                        nioSocketChannel.pipeline().addLast(new PacketDecoderHandler());
                         nioSocketChannel.pipeline().addLast(new LoginServerHandler());
+                        nioSocketChannel.pipeline().addLast(new AuthServerHandler());
+                        nioSocketChannel.pipeline().addLast(new MessageServerHandler());
+                        nioSocketChannel.pipeline().addLast(new PacketEncoderHandler());
+
                     }
                 })
                 .bind(8000);

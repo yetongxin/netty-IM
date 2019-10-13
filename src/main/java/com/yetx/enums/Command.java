@@ -1,9 +1,15 @@
 package com.yetx.enums;
 
 public enum Command {
-    LOGIN_REQUEST((byte)1),
+    LOGIN_REQUEST(1),
 
-    LOGIN_RESPONE((byte)101);
+    LOGIN_RESPONE(101),
+
+    MESSAGE_REQUEST(2),
+    MESSAGE_RESPONSE(102),
+
+    ;
+
 
 
     Command(Byte command) {
@@ -12,11 +18,11 @@ public enum Command {
 
     public Byte command;
 
-    public Byte getCommand() {
-        return command;
+    Command(int i) {
+        this.command = (byte)i;
     }
 
-    public void setCommand(Byte command) {
-        this.command = command;
+    public Byte getCommand() {
+        return command;
     }
 }
